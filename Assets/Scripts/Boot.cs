@@ -19,9 +19,11 @@ public class Boot : MonoBehaviour
     {
         while (true)
         {
-            VoronoiMapData map = new VoronoiMapData(new Vector2(25, 25));
-
+            VoronoiMapData map = new VoronoiMapData(new Vector2(25, 25), generateCellsAutomatically: false);
             gizmoDrawer.Map = map;
+
+            yield return map.GenerateCellsRoutine();
+
             meshCreator.GenerateMesh(map);
 
             yield return null;

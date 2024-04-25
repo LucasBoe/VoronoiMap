@@ -7,35 +7,56 @@ namespace VoronoiMap
 {
     public class VoronoiMapGizmoDrawer : MonoBehaviour
     {
-        private VoronoiMapData mapData;
-
+        [SerializeField] private VoronoiMapData mapData;
         public VoronoiMapData Map { get => mapData; set => mapData = value; }
+
+        [SerializeField] private bool drawBounds = true;
+        [SerializeField] private bool drawCells = true;
+        [SerializeField] private bool drawFails = true;
+
+        [SerializeField, Range(0, 10)] int failStepsToDraw = 10;
 
         private void OnDrawGizmos()
         {
             if (mapData == null)
                 return;
 
-            for (int i = 0; i < mapData.Cells.Count; i++)
+            if (drawCells)
             {
-                VoronoiCellData cell = mapData.Cells[i];
-                Gizmos.color = Color.HSVToRGB((float)i / mapData.Cells.Count, 1, 1);
-                for (int j = 1; j < cell.Edges3D.Length; j++)
+                for (int i = 0; i < mapData.Cells.Count; i++)
                 {
-                    Gizmos.DrawLine(cell.Edges3D[j - 1], cell.Edges3D[j]);
+                    VoronoiCellData cell = mapData.Cells[i];
+                    Gizmos.color = Color.HSVToRGB((float)i / mapData.Cells.Count, 1, 1);
+                    for (int j = 1; j < cell.Edges3D.Length; j++)
+                    {
+                        Gizmos.DrawLine(cell.Edges3D[j - 1], cell.Edges3D[j]);
+                    }
                 }
             }
 
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(new Vector3(0, 0, 0), new Vector3(0, 0, mapData.Size.y));
-            Gizmos.DrawLine(new Vector3(0, 0, 0), new Vector3(mapData.Size.x, 0, 0));
-            Gizmos.DrawLine(new Vector3(mapData.Size.x, 0, 0), new Vector3(mapData.Size.x, 0, mapData.Size.y));
-            Gizmos.DrawLine(new Vector3(0, 0, mapData.Size.y), new Vector3(mapData.Size.x, 0, mapData.Size.y));
-
-            Gizmos.color = Color.red;
-            foreach (var item in mapData.Fails)
+            if (drawBounds)
             {
-                Gizmos.DrawWireSphere(ToV3(item), .2f);
+                Gizmos.color = Color.yellow;
+                Gizmos.DrawLine(new Vector3(0, 0, 0), new Vector3(0, 0, mapData.Size.y));
+                Gizmos.DrawLine(new Vector3(0, 0, 0), new Vector3(mapData.Size.x, 0, 0));
+                Gizmos.DrawLine(new Vector3(mapData.Size.x, 0, 0), new Vector3(mapData.Size.x, 0, mapData.Size.y));
+                Gizmos.DrawLine(new Vector3(0, 0, mapData.Size.y), new Vector3(mapData.Size.x, 0, mapData.Size.y));
+            }
+
+            if (drawFails)
+            {
+                foreach (var item in mapData.Fails)
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawWireSphere(ToV3(item.Center), .2f);
+                    int max = Mathf.Min(item.OwnEdgePoints.Count, failStepsToDraw);
+
+                    for (int j = 1; j < max; j++)
+                    {
+                        Gizmos.color = Color.Lerp(Color.yellow, Color.red, (float)j / max);
+                        Gizmos.DrawLine(ToV3(item.OwnEdgePoints[j - 1]), ToV3(item.OwnEdgePoints[j]));
+                    }
+                }
             }
         }
     }
